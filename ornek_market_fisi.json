@@ -1,0 +1,138 @@
+[
+  {
+    "type": "text",
+    "text": "EMİR MARKET",
+    "size": 40,
+    "align": "center",
+    "bold": true,
+    "font": "Arial"
+  },
+  {
+    "type": "text",
+    "text": "Atatürk Cad. No:12\nKadıköy / İSTANBUL\nTel: 0216 000 00 00",
+    "size": 18,
+    "align": "center",
+    "bold": false,
+    "font": "Arial"
+  },
+  {
+    "type": "text",
+    "text": "Kadıköy V.D. 1234567890",
+    "size": 18,
+    "align": "center",
+    "bold": false,
+    "font": "Arial"
+  },
+  {
+    "type": "space",
+    "height": 6
+  },
+  {
+    "type": "text",
+    "text": "TARİH: {tarih}      SAAT: {saat}",
+    "size": 20,
+    "align": "left",
+    "bold": false,
+    "font": "Consolas"
+  },
+  {
+    "type": "text",
+    "text": "FİŞ NO: 0042              KASA: 01",
+    "size": 20,
+    "align": "left",
+    "bold": false,
+    "font": "Consolas"
+  },
+  {
+    "type": "line",
+    "style": "dashed",
+    "thickness": 2
+  },
+  {
+    "type": "text",
+    "text": "EKMEK                %1     *30,00\n  2 AD X 15,00\nSÜT 1 LT             %1     *42,50\nYUMURTA 15'Lİ        %1     *89,90\nBEYAZ PEYNİR 500 GR  %1    *164,75\nDOMATES KG           %1     *49,88\n  1,25 KG X 39,90\nÇAY 1000 GR         %10    *219,00\nDETERJAN 4 KG       %20    *289,99\nÇİKOLATA 80 GR      %10     *82,50\n  3 AD X 27,50",
+    "size": 20,
+    "align": "left",
+    "bold": false,
+    "font": "Consolas"
+  },
+  {
+    "type": "line",
+    "style": "dashed",
+    "thickness": 2
+  },
+  {
+    "type": "text",
+    "text": "KDV %1                       *3,73\nKDV %10                     *27,41\nKDV %20                     *48,33",
+    "size": 20,
+    "align": "left",
+    "bold": false,
+    "font": "Consolas"
+  },
+  {
+    "type": "text",
+    "text": "TOPKDV                      *79,47",
+    "size": 20,
+    "align": "left",
+    "bold": false,
+    "font": "Consolas"
+  },
+  {
+    "type": "line",
+    "style": "solid",
+    "thickness": 3
+  },
+  {
+    "type": "text",
+    "text": "TOPLAM  *968,52 TL",
+    "size": 30,
+    "align": "center",
+    "bold": true,
+    "font": "Arial"
+  },
+  {
+    "type": "line",
+    "style": "solid",
+    "thickness": 3
+  },
+  {
+    "type": "text",
+    "text": "NAKİT                    *1.000,00\nPARA ÜSTÜ                   *31,48",
+    "size": 20,
+    "align": "left",
+    "bold": false,
+    "font": "Consolas"
+  },
+  {
+    "type": "text",
+    "text": "ÜRÜN ADEDİ                       8",
+    "size": 20,
+    "align": "left",
+    "bold": false,
+    "font": "Consolas"
+  },
+  {
+    "type": "space",
+    "height": 10
+  },
+  {
+    "type": "text",
+    "text": "Bizi tercih ettiğiniz için\nteşekkür ederiz!",
+    "size": 22,
+    "align": "center",
+    "bold": true,
+    "font": "Arial"
+  },
+  {
+    "type": "text",
+    "text": "Mali değeri yoktur - örnek fiştir",
+    "size": 16,
+    "align": "center",
+    "bold": false,
+    "font": "Arial"
+  },
+  {
+    "type": "space",
+    "height": 10
+  }
+]

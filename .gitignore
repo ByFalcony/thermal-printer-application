@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+venv/
+.venv/
+
+# Kişisel çalışma dosyaları
+son_fis.json
+ayarlar.json
