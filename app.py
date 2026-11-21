@@ -3,6 +3,7 @@ import copy
 import json
 import os
 import queue
+import sys
 import time
 from tkinter import filedialog, messagebox
 import tkinter as tk
@@ -48,6 +49,11 @@ TYPE_STYLE = {
 ALIGN_TR = {"left": "Sol", "center": "Orta", "right": "Sağ"}
 ALIGN_EN = {v: k for k, v in ALIGN_TR.items()}
 THEMES = {"Açık": "light", "Koyu": "dark", "Sistem": "system"}
+
+IS_WIN = sys.platform == "win32"
+IS_MAC = sys.platform == "darwin"
+# Arayüz yazı tipi: her sistemin kendi yerel yazı tipi
+UI_FONT = "Segoe UI" if IS_WIN else ("Helvetica Neue" if IS_MAC else "DejaVu Sans")
 
 DEFAULT_BLOCKS = [
     {"type": "text", "text": "FİŞ BAŞLIĞI", "size": 36, "align": "center", "bold": True, "font": "Arial"},
@@ -120,7 +126,7 @@ class App:
         self.last_reply = None
         self.copies = 1
 
-        F = "Segoe UI"
+        F = UI_FONT
         self.f_title = ctk.CTkFont(F, 22, "bold")
         self.f_h2 = ctk.CTkFont(F, 15, "bold")
         self.f_body = ctk.CTkFont(F, 13)
@@ -144,6 +150,8 @@ class App:
 
         root.protocol("WM_DELETE_WINDOW", self.on_close)
         root.bind("<Control-p>", lambda e: self.do_print())
+        if IS_MAC:
+            root.bind("<Command-p>", lambda e: self.do_print())
         root.after(100, self._poll)
         root.after(1000, self._tick)
         if self.settings.get("auto_connect", True):
@@ -166,7 +174,7 @@ class App:
             logo = ctk.CTkLabel(brand, text="", image=self._logo, width=46, height=46)
         else:
             logo = ctk.CTkLabel(brand, text="F", width=44, height=44, corner_radius=12, fg_color=ACCENT,
-                                text_color="white", font=ctk.CTkFont("Segoe UI", 22, "bold"))
+                                text_color="white", font=ctk.CTkFont(UI_FONT, 22, "bold"))
         logo.pack(side="left")
         tb = ctk.CTkFrame(brand, fg_color="transparent")
         tb.pack(side="left", padx=12)
@@ -177,7 +185,7 @@ class App:
         # bağlantı durumu kapsülü
         pill = ctk.CTkFrame(h, fg_color=SUB, corner_radius=14)
         pill.grid(row=0, column=1, padx=10, pady=14, sticky="w")
-        self.dot = ctk.CTkLabel(pill, text="●", font=ctk.CTkFont("Segoe UI", 22), text_color="#9ca3af", width=24)
+        self.dot = ctk.CTkLabel(pill, text="●", font=ctk.CTkFont(UI_FONT, 22), text_color="#9ca3af", width=24)
         self.dot.pack(side="left", padx=(14, 6), pady=6)
         txt = ctk.CTkFrame(pill, fg_color="transparent")
         txt.pack(side="left", padx=(0, 18), pady=6)
@@ -296,7 +304,9 @@ class App:
         sb = ctk.CTkScrollbar(wrap, command=self.canvas.yview)
         sb.grid(row=0, column=1, sticky="ns", pady=6)
         self.canvas.configure(yscrollcommand=sb.set)
-        self.canvas.bind("<MouseWheel>", lambda e: self.canvas.yview_scroll(int(-e.delta / 120) * 3, "units"))
+        self.canvas.bind("<MouseWheel>", self._on_wheel)
+        self.canvas.bind("<Button-4>", lambda e: self.canvas.yview_scroll(-3, "units"))   # Linux (X11)
+        self.canvas.bind("<Button-5>", lambda e: self.canvas.yview_scroll(3, "units"))
         self.canvas.bind("<Configure>", lambda e: self.schedule_preview())
 
         ctl = ctk.CTkFrame(c, fg_color="transparent")
@@ -328,7 +338,7 @@ class App:
         self.progress = ctk.CTkProgressBar(ctl, height=6, progress_color=ACCENT)
         self.progress.set(0)
         self.progress.grid(row=3, column=0, columnspan=3, sticky="ew")
-        ctk.CTkLabel(ctl, text="Kısayol: Ctrl+P", font=self.f_small, text_color=MUTED, height=16).grid(
+        ctk.CTkLabel(ctl, text="Kısayol: " + ("⌘P" if IS_MAC else "Ctrl+P"), font=self.f_small, text_color=MUTED, height=16).grid(
             row=4, column=0, columnspan=3, pady=(6, 0))
 
     # ================================================================ liste
@@ -490,7 +500,7 @@ class App:
         getattr(self, f"_edit_{t}")(p, b)
 
     def _edit_text(self, p, b):
-        tb = ctk.CTkTextbox(p, height=180, wrap="word", font=ctk.CTkFont("Segoe UI", 16), corner_radius=12,
+        tb = ctk.CTkTextbox(p, height=180, wrap="word", font=ctk.CTkFont(UI_FONT, 16), corner_radius=12,
                             border_width=1, border_color=BORDER, fg_color=SUB, text_color=TEXT)
         tb.grid(row=0, column=0, columnspan=3, sticky="ew", padx=10, pady=(4, 6))
         tb.insert("1.0", b.get("text", ""))
@@ -625,6 +635,14 @@ class App:
         if self._preview_job:
             self.root.after_cancel(self._preview_job)
         self._preview_job = self.root.after(150, self.update_preview)
+
+    def _on_wheel(self, e):
+        # Windows'ta delta 120'nin katlarıdır; macOS'ta küçük değerler gelir (tek tek kaydırma)
+        if IS_MAC:
+            step = -e.delta
+        else:
+            step = int(-e.delta / 120) * 3 or (-1 if e.delta > 0 else 1)
+        self.canvas.yview_scroll(step, "units")
 
     def _preview_bg(self):
         return PREVIEW_BG[ctk.get_appearance_mode()]
@@ -820,14 +838,31 @@ class App:
 
 APP_ID = "Emir.FisYazici.1"
 ICON_ICO = os.path.join(APP_DIR, "icon.ico")
+ICON_PNG = os.path.join(APP_DIR, "icon.png")
 
 
 def set_windows_app_id():
     """Windows'a bu pencerenin python.exe değil ayrı bir uygulama olduğunu söyler.
     Böylece görev çubuğunda Python simgesi yerine uygulamanın kendi simgesi görünür."""
+    if not IS_WIN:
+        return
     try:
         import ctypes
         ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(APP_ID)
+    except Exception:
+        pass
+
+
+def set_window_icon(root):
+    try:
+        if IS_WIN and os.path.exists(ICON_ICO):
+            # default= ile açılan tüm alt pencereler (dosya seçme, uyarılar) de aynı simgeyi alır
+            root.iconbitmap(default=ICON_ICO)
+            root.iconbitmap(ICON_ICO)
+        elif os.path.exists(ICON_PNG):
+            # macOS / Linux: .ico desteklenmez, PNG kullanılır
+            root._icon_img = ImageTk.PhotoImage(Image.open(ICON_PNG))
+            root.iconphoto(True, root._icon_img)
     except Exception:
         pass
 
@@ -838,10 +873,7 @@ def main():
     ctk.set_appearance_mode(THEMES.get(settings.get("theme", "Sistem"), "system"))
     ctk.set_default_color_theme("blue")
     root = ctk.CTk()
-    if os.path.exists(ICON_ICO):
-        # default= ile açılan tüm alt pencereler (dosya seçme, uyarılar) de aynı simgeyi alır
-        root.iconbitmap(default=ICON_ICO)
-        root.iconbitmap(ICON_ICO)
+    set_window_icon(root)
     App(root)
     root.mainloop()
 

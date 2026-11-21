@@ -11,26 +11,85 @@ MARGIN = 4
 # Yazıcı her bayttaki ilk pikseli en düşük bitte bekler.
 LSB_FIRST = True
 
-FONT_DIR = os.path.join(os.environ.get("WINDIR", r"C:\Windows"), "Fonts")
+def _font_dirs():
+    """Windows, macOS ve Linux'taki olağan yazı tipi klasörleri."""
+    home = os.path.expanduser("~")
+    return [
+        os.path.join(os.environ.get("WINDIR", r"C:\Windows"), "Fonts"),
+        os.path.join(os.environ.get("LOCALAPPDATA", ""), "Microsoft", "Windows", "Fonts"),
+        "/System/Library/Fonts", "/System/Library/Fonts/Supplemental", "/Library/Fonts",
+        os.path.join(home, "Library", "Fonts"),
+        "/usr/share/fonts", "/usr/local/share/fonts",
+        os.path.join(home, ".local", "share", "fonts"), os.path.join(home, ".fonts"),
+    ]
+
+
+# Her yazı tipi için (normal, kalın) dosya adı adayları, öncelik sırasıyla.
+# Windows adları önce gelir; macOS'ta çoğu aynı ailenin farklı dosya adıdır;
+# Linux'ta Microsoft yazı tipleri yoksa ölçüleri eşdeğer açık kaynak yazı tipleri kullanılır.
 FONTS = {
-    "Arial": ("arial.ttf", "arialbd.ttf"),
-    "Segoe UI": ("segoeui.ttf", "segoeuib.ttf"),
-    "Times New Roman": ("times.ttf", "timesbd.ttf"),
-    "Consolas": ("consola.ttf", "consolab.ttf"),
-    "Comic Sans": ("comic.ttf", "comicbd.ttf"),
-    "Impact": ("impact.ttf", "impact.ttf"),
+    "Arial": (
+        ["arial.ttf", "Arial.ttf", "LiberationSans-Regular.ttf", "Arimo-Regular.ttf", "DejaVuSans.ttf"],
+        ["arialbd.ttf", "Arial Bold.ttf", "LiberationSans-Bold.ttf", "Arimo-Bold.ttf", "DejaVuSans-Bold.ttf"],
+    ),
+    "Segoe UI": (
+        ["segoeui.ttf", "SFNS.ttf", "Ubuntu-R.ttf", "NotoSans-Regular.ttf", "DejaVuSans.ttf"],
+        ["segoeuib.ttf", "SFNS.ttf", "Ubuntu-B.ttf", "NotoSans-Bold.ttf", "DejaVuSans-Bold.ttf"],
+    ),
+    "Times New Roman": (
+        ["times.ttf", "Times New Roman.ttf", "LiberationSerif-Regular.ttf", "Tinos-Regular.ttf",
+         "DejaVuSerif.ttf"],
+        ["timesbd.ttf", "Times New Roman Bold.ttf", "LiberationSerif-Bold.ttf", "Tinos-Bold.ttf",
+         "DejaVuSerif-Bold.ttf"],
+    ),
+    "Consolas": (
+        ["consola.ttf", "Menlo.ttc", "LiberationMono-Regular.ttf", "DejaVuSansMono.ttf"],
+        ["consolab.ttf", "Menlo.ttc", "LiberationMono-Bold.ttf", "DejaVuSansMono-Bold.ttf"],
+    ),
+    "Comic Sans": (
+        ["comic.ttf", "Comic Sans MS.ttf", "ComicNeue-Regular.ttf", "ComicNeue-Regular.otf", "DejaVuSans.ttf"],
+        ["comicbd.ttf", "Comic Sans MS Bold.ttf", "ComicNeue-Bold.ttf", "ComicNeue-Bold.otf",
+         "DejaVuSans-Bold.ttf"],
+    ),
+    "Impact": (
+        ["impact.ttf", "Impact.ttf", "Anton-Regular.ttf", "LiberationSans-Bold.ttf", "DejaVuSans-Bold.ttf"],
+        ["impact.ttf", "Impact.ttf", "Anton-Regular.ttf", "LiberationSans-Bold.ttf", "DejaVuSans-Bold.ttf"],
+    ),
 }
 
+_font_index = None
 _font_cache = {}
+
+
+def _find_font_file(filename):
+    """Yazı tipi klasörlerini (alt klasörler dahil) bir kez tarar, dosyayı adına göre bulur."""
+    global _font_index
+    if _font_index is None:
+        _font_index = {}
+        for d in _font_dirs():
+            if not d or not os.path.isdir(d):
+                continue
+            for root, _dirs, files in os.walk(d):
+                for f in files:
+                    _font_index.setdefault(f.lower(), os.path.join(root, f))
+    return _font_index.get(filename.lower())
 
 
 def get_font(name, size, bold=False):
     key = (name, size, bold)
     if key not in _font_cache:
-        files = FONTS.get(name, FONTS["Arial"])
-        try:
-            font = ImageFont.truetype(os.path.join(FONT_DIR, files[1 if bold else 0]), size)
-        except OSError:
+        candidates = FONTS.get(name, FONTS["Arial"])[1 if bold else 0]
+        font = None
+        for fn in candidates:
+            path = _find_font_file(fn)
+            if not path:
+                continue
+            try:
+                font = ImageFont.truetype(path, size)
+                break
+            except OSError:
+                continue
+        if font is None:
             font = ImageFont.load_default(size)
         _font_cache[key] = font
     return _font_cache[key]

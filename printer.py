@@ -5,6 +5,7 @@ Tüm Bluetooth işlemleri ayrı bir arka plan iş parçacığında (asyncio) ça
 arayüz sadece olay (event) kuyruğunu dinler.
 """
 import asyncio
+import sys
 import threading
 import time
 
@@ -128,6 +129,11 @@ class X5Printer:
             self._set_state("error", f"Bluetooth taraması başarısız: {e}. Bluetooth açık mı?")
             return
 
+        if device is None and sys.platform == "darwin":
+            # macOS (CoreBluetooth) MAC adresi kullanmaz; cihaz taramada bulunmalı
+            self._set_state("error", "Yazıcı bulunamadı: açık olduğundan, telefona bağlı olmadığından ve "
+                                     "Bluetooth izni verildiğinden emin olun.")
+            return
         target = device or DEFAULT_ADDRESS
         self._set_state("connecting", "Bağlanılıyor...")
         client = BleakClient(target, disconnected_callback=self._on_disconnected, timeout=20.0)
